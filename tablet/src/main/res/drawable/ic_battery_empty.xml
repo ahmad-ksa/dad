@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="140dp"
+    android:height="140dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Battery body -->
+    <path
+        android:pathData="M4,8 h13 a1,1 0 0 1 1,1 v6 a1,1 0 0 1 -1,1 h-13 a1,1 0 0 1 -1,-1 v-6 a1,1 0 0 1 1,-1 z"
+        android:strokeColor="@color/battery_gray"
+        android:strokeWidth="1.2"
+        android:fillColor="#00000000" />
+    <!-- Battery terminal -->
+    <path
+        android:pathData="M19,10.5 h1.5 v3 h-1.5 z"
+        android:fillColor="@color/battery_gray" />
+</vector>

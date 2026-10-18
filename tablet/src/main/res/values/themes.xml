@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Dad" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/dad_primary</item>
+        <item name="android:statusBarColor">@color/dad_primary</item>
+    </style>
+
+    <!-- Pure black, no system bars, used for the fake shutdown. -->
+    <style name="Theme.Dad.Lock" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowShowWallpaper">false</item>
+    </style>
+</resources>

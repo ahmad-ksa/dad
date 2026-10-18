@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dad Remote</string>
+
+    <string name="action_lock">🔌  Fake shutdown</string>
+    <string name="action_battery">🔋  Low-battery warning</string>
+    <string name="action_unlock">🔓  Unlock</string>
+
+    <string name="searching">Searching for the tablet…</string>
+    <string name="connected_to">Connected · %1$s</string>
+    <string name="no_tablet">Tablet not found on this WiFi yet</string>
+
+    <string name="pairing_label">Pairing code (shown on the tablet)</string>
+    <string name="pairing_hint">e.g. 7f3a9c2b1d4e5f60</string>
+    <string name="save">Save</string>
+    <string name="token_saved">Pairing code saved</string>
+
+    <string name="sent_lock">Fake shutdown sent</string>
+    <string name="sent_battery">Battery warning sent</string>
+    <string name="sent_unlock">Unlock sent</string>
+    <string name="sent_ok">Done</string>
+    <string name="failed">Failed: %1$s</string>
+</resources>

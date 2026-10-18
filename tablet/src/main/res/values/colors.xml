@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dad_primary">#1F2933</color>
+    <color name="dad_accent">#3DDC84</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="battery_gray">#5A5F66</color>
+</resources>
