@@ -31,6 +31,16 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      # Regenerate a pristine Gradle wrapper on the runner (network is
+      # available here) so the build never depends on the committed jar.
+      - name: Ensure a valid Gradle wrapper
+        run: |
+          tmp="$(mktemp -d)"
+          ( cd "$tmp" && echo 'rootProject.name = "w"' > settings.gradle \
+            && gradle wrapper --gradle-version 8.9 --distribution-type bin )
+          cp "$tmp/gradle/wrapper/gradle-wrapper.jar" gradle/wrapper/gradle-wrapper.jar
+          echo "Wrapper jar refreshed: $(wc -c < gradle/wrapper/gradle-wrapper.jar) bytes"
+
       - name: Build debug APKs
         run: |
           set +e
