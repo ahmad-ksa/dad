@@ -37,10 +37,11 @@ jobs:
           ./gradlew :tablet:assembleDebug :phone:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
-            # Surface the real errors as annotations (CI log files are not
-            # reachable from the authoring environment).
-            grep -E "e: |error:|FAILED|What went wrong|Could not|Unresolved|AAPT|is not found" build.log \
-              | head -30 | while IFS= read -r line; do echo "::error::$line"; done
+            # Surface the tail of the build log as annotations, since CI log
+            # files are not reachable from the authoring environment.
+            tail -n 35 build.log | while IFS= read -r line; do
+              [ -n "$line" ] && echo "::error::$line"
+            done
           fi
           exit "$code"
 
