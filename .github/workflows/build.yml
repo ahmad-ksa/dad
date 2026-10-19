@@ -25,8 +25,8 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # The ubuntu-latest runner ships with the Android SDK (platform 34 and
+      # build-tools) preinstalled, so no separate SDK setup step is needed.
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
