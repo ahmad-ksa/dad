@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshStatus() {
         val status = buildString {
-            appendLine(statusLine(R.string.perm_overlay, canDrawOverlay()))
+            appendLine(statusLine(R.string.perm_overlay, hasOverlayPermission()))
             appendLine(statusLine(R.string.perm_accessibility, DadAccessibilityService.instance != null))
         }
         findViewById<TextView>(R.id.statusValue).text = status
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         return "$mark ${getString(labelRes)}"
     }
 
-    private fun canDrawOverlay(): Boolean =
+    private fun hasOverlayPermission(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlay(this)
 
     private fun requestOverlay() {
