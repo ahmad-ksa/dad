@@ -47,14 +47,17 @@ jobs:
           ./gradlew :tablet:assembleDebug :phone:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
-            # Surface the real Kotlin/AAPT errors as annotations, since CI log
-            # files are not reachable from the authoring environment.
-            grep -nE "^e: |^w: |error:|Unresolved|Too many|overrides nothing|Type mismatch|None of the following|cannot|AAPT" build.log \
-              | head -40 | while IFS= read -r line; do echo "::error::$line"; done
-            echo "---- tail ----"
-            tail -n 20 build.log | while IFS= read -r line; do
-              [ -n "$line" ] && echo "::error::TAIL $line"
-            done
+            # GitHub caps annotations per step, so join all Kotlin/AAPT error
+            # lines into a single annotation (CI log files are not reachable
+            # from the authoring environment).
+            errs="$(grep -E "^e: |error:|Unresolved|overrides nothing|Type mismatch|None of the following|AAPT" build.log || true)"
+            if [ -n "$errs" ]; then
+              enc="$(printf '%s' "$errs" | sed ':a;N;$!ba;s/\n/%0A/g')"
+              echo "::error::$enc"
+            else
+              tail="$(tail -n 25 build.log | sed ':a;N;$!ba;s/\n/%0A/g')"
+              echo "::error::$tail"
+            fi
           fi
           exit "$code"
 

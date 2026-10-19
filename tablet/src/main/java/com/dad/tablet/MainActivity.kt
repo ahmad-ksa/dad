@@ -59,11 +59,14 @@ class MainActivity : AppCompatActivity() {
         return "$mark ${getString(labelRes)}"
     }
 
-    private fun hasOverlayPermission(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlay(this)
+    /** True if we may draw over other apps (always true before Android 6). */
+    private fun hasOverlayPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+        return android.provider.Settings.canDrawOverlay(applicationContext)
+    }
 
     private fun requestOverlay() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlay(this)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             startActivity(
                 Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
