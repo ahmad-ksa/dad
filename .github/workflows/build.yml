@@ -32,7 +32,17 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build debug APKs
-        run: ./gradlew :tablet:assembleDebug :phone:assembleDebug --no-daemon --stacktrace
+        run: |
+          set +e
+          ./gradlew :tablet:assembleDebug :phone:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            # Surface the real errors as annotations (CI log files are not
+            # reachable from the authoring environment).
+            grep -E "e: |error:|FAILED|What went wrong|Could not|Unresolved|AAPT|is not found" build.log \
+              | head -30 | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"
 
       - name: Collect APKs
         run: |
