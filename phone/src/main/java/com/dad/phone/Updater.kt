@@ -44,7 +44,7 @@ object Updater {
             readTimeout = 30000
         }
         conn.connect()
-        conn.inputStream.use { input -> out.outputStream.use { input.copyTo(it) } }
+        conn.inputStream.use { input -> out.outputStream().use { input.copyTo(it) } }
         conn.disconnect()
         return out
     }
