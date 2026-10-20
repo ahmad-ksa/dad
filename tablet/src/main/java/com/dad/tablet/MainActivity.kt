@@ -1,10 +1,11 @@
 package com.dad.tablet
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
@@ -21,6 +22,18 @@ import androidx.appcompat.app.AppCompatActivity
 class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: Prefs
+
+    private var selectedMinutes = 60
+    private lateinit var timerText: TextView
+    private lateinit var durationButtons: Map<Int, Button>
+
+    private val uiHandler = Handler(Looper.getMainLooper())
+    private val ticker = object : Runnable {
+        override fun run() {
+            updateTimerText()
+            uiHandler.postDelayed(this, 1000L)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,11 +52,31 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnTestLock).setOnClickListener {
             LockController(this).lock(showBatteryFirst = true)
         }
+
+        timerText = findViewById(R.id.timerText)
+        durationButtons = mapOf(
+            15 to findViewById(R.id.btnMin15),
+            30 to findViewById(R.id.btnMin30),
+            45 to findViewById(R.id.btnMin45),
+            60 to findViewById(R.id.btnMin60),
+        )
+        durationButtons.forEach { (minutes, button) ->
+            button.setOnClickListener { selectedMinutes = minutes; highlightDuration() }
+        }
+        highlightDuration()
+        findViewById<Button>(R.id.btnStartTimer).setOnClickListener { startTimer() }
+        findViewById<Button>(R.id.btnCancelTimer).setOnClickListener { cancelTimer() }
     }
 
     override fun onResume() {
         super.onResume()
         refreshStatus()
+        uiHandler.post(ticker)
+    }
+
+    override fun onPause() {
+        uiHandler.removeCallbacks(ticker)
+        super.onPause()
     }
 
     private fun refreshStatus() {
@@ -85,5 +118,50 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         }
+    }
+
+    // --- Auto-lock timer ---------------------------------------------------
+
+    private fun startTimer() {
+        ControlService.startTimer(this, selectedMinutes)
+        Toast.makeText(
+            this,
+            getString(R.string.timer_running, formatDuration(selectedMinutes * 60_000L)),
+            Toast.LENGTH_SHORT
+        ).show()
+        updateTimerText()
+    }
+
+    private fun cancelTimer() {
+        ControlService.cancelTimer(this)
+        updateTimerText()
+    }
+
+    private fun highlightDuration() {
+        durationButtons.forEach { (minutes, button) ->
+            val selected = minutes == selectedMinutes
+            button.backgroundTintList =
+                getColorStateList(if (selected) R.color.dad_accent else R.color.battery_gray)
+            button.setTextColor(getColor(if (selected) R.color.black else R.color.white))
+        }
+    }
+
+    private fun updateTimerText() {
+        val endAt = prefs.sessionEndAt
+        val remaining = if (endAt > 0L) endAt - System.currentTimeMillis() else 0L
+        timerText.text = when {
+            endAt <= 0L -> getString(R.string.timer_idle)
+            remaining <= 0L -> getString(R.string.timer_done)
+            else -> getString(R.string.timer_running, formatDuration(remaining))
+        }
+    }
+
+    private fun formatDuration(ms: Long): String {
+        val totalSec = (ms / 1000L).toInt()
+        val h = totalSec / 3600
+        val m = (totalSec % 3600) / 60
+        val s = totalSec % 60
+        return if (h > 0) String.format("%d:%02d:%02d", h, m, s)
+        else String.format("%d:%02d", m, s)
     }
 }

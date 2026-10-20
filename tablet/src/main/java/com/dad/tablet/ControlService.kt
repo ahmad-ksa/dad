@@ -47,10 +47,19 @@ class ControlService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // If we were killed and restarted while locked, put the lock back up,
-        // and re-arm any auto-lock session that was still running.
-        if (prefs.locked) main.post { lock.reassertIfLocked() }
-        main.post { timer.resume() }
+        when (intent?.action) {
+            ACTION_START_TIMER -> {
+                val minutes = intent.getIntExtra(EXTRA_MINUTES, 60)
+                main.post { timer.start(minutes) }
+            }
+            ACTION_CANCEL_TIMER -> main.post { timer.cancel() }
+            else -> {
+                // Normal start or a restart after being killed: restore the lock
+                // if needed and re-arm any session that was still running.
+                if (prefs.locked) main.post { lock.reassertIfLocked() }
+                main.post { timer.resume() }
+            }
+        }
         return START_STICKY
     }
 
@@ -195,8 +204,22 @@ class ControlService : Service() {
         private const val CHANNEL_ID = "dad_control"
         private const val SOCKET_TIMEOUT = 10_000
 
-        fun start(context: Context) {
-            val intent = Intent(context, ControlService::class.java)
+        const val ACTION_START_TIMER = "com.dad.tablet.action.START_TIMER"
+        const val ACTION_CANCEL_TIMER = "com.dad.tablet.action.CANCEL_TIMER"
+        const val EXTRA_MINUTES = "minutes"
+
+        fun start(context: Context) = deliver(context, null)
+
+        /** Start an auto-lock session straight from the tablet UI. */
+        fun startTimer(context: Context, minutes: Int) =
+            deliver(context, Intent().setAction(ACTION_START_TIMER).putExtra(EXTRA_MINUTES, minutes))
+
+        /** Cancel a running session from the tablet UI. */
+        fun cancelTimer(context: Context) =
+            deliver(context, Intent().setAction(ACTION_CANCEL_TIMER))
+
+        private fun deliver(context: Context, template: Intent?) {
+            val intent = (template ?: Intent()).setClass(context, ControlService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
