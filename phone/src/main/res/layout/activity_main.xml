@@ -258,14 +258,5 @@
             android:text="@string/save"
             android:textColor="@color/text_primary"
             android:backgroundTint="@color/surface" />
-
-        <Button
-            android:id="@+id/btnUpdate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="@string/update_button"
-            android:textColor="@color/text_primary"
-            android:backgroundTint="@color/surface" />
     </LinearLayout>
 </ScrollView>

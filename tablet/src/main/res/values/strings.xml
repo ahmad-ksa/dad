@@ -37,8 +37,4 @@
     <string name="timer_idle">لا يوجد مؤقت شغّال</string>
     <string name="timer_running">يُقفل بعد %1$s</string>
     <string name="timer_done">انتهى الوقت</string>
-
-    <string name="update_button">🔄  تحديث التطبيق لآخر نسخة</string>
-    <string name="update_downloading">جاري تنزيل التحديث…</string>
-    <string name="update_failed">فشل التحديث — تأكد من الإنترنت</string>
 </resources>

@@ -41,8 +41,4 @@
     <string name="timer_done">انتهى الوقت</string>
     <string name="timer_started">بدأ المؤقت: %1$d دقيقة</string>
     <string name="timer_cancelled">تم إلغاء المؤقت</string>
-
-    <string name="update_button">🔄  تحديث التطبيق لآخر نسخة</string>
-    <string name="update_downloading">جاري تنزيل التحديث…</string>
-    <string name="update_failed">فشل التحديث — تأكد من الإنترنت</string>
 </resources>
