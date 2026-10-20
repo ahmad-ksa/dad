@@ -10,6 +10,10 @@ object Protocol {
     const val CMD_BATTERY = "battery"
     const val CMD_UNLOCK = "unlock"
     const val CMD_STATUS = "status"
+    const val CMD_START_TIMER = "start_timer"
+    const val CMD_CANCEL_TIMER = "cancel_timer"
+
+    const val PARAM_MINUTES = "minutes"
 
     const val HEADER_TOKEN = "x-dad-token"
 }

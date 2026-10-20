@@ -31,11 +31,23 @@ class Prefs(context: Context) {
         get() = sp.getString(KEY_TOKEN, "") ?: ""
         set(value) = sp.edit().putString(KEY_TOKEN, value).apply()
 
+    /** Wall-clock time (epoch millis) the current auto-lock session ends; 0 = none. */
+    var sessionEndAt: Long
+        get() = sp.getLong(KEY_SESSION_END, 0L)
+        set(value) = sp.edit().putLong(KEY_SESSION_END, value).apply()
+
+    /** Total length of the current session in millis, used for the 20%/10% marks. */
+    var sessionTotalMs: Long
+        get() = sp.getLong(KEY_SESSION_TOTAL, 0L)
+        set(value) = sp.edit().putLong(KEY_SESSION_TOTAL, value).apply()
+
     companion object {
         private const val KEY_LOCKED = "locked"
         private const val KEY_VOLUME = "saved_media_volume"
         private const val KEY_PIN = "pin"
         private const val KEY_TOKEN = "pairing_token"
+        private const val KEY_SESSION_END = "session_end_at"
+        private const val KEY_SESSION_TOTAL = "session_total_ms"
         const val DEFAULT_PIN = "0000"
     }
 }

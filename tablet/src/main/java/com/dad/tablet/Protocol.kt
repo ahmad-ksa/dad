@@ -17,6 +17,11 @@ object Protocol {
     const val CMD_BATTERY = "battery"      // fake low-battery warning
     const val CMD_UNLOCK = "unlock"        // release the lock
     const val CMD_STATUS = "status"        // report battery / lock state
+    const val CMD_START_TIMER = "start_timer"   // begin an auto-lock session
+    const val CMD_CANCEL_TIMER = "cancel_timer" // cancel a running session
+
+    /** Query parameter for the session length, in minutes. */
+    const val PARAM_MINUTES = "minutes"
 
     /** Header carrying the pairing token on every request. */
     const val HEADER_TOKEN = "x-dad-token"

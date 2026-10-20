@@ -30,6 +30,7 @@ class ControlService : Service() {
 
     private lateinit var prefs: Prefs
     private lateinit var lock: LockController
+    private lateinit var timer: SessionTimer
     private var server: CommandServer? = null
     private var nsdManager: NsdManager? = null
     private var registrationListener: NsdManager.RegistrationListener? = null
@@ -39,14 +40,17 @@ class ControlService : Service() {
         super.onCreate()
         prefs = Prefs(this)
         lock = LockController(this)
+        timer = SessionTimer(lock, prefs)
         startForeground(NOTIF_ID, buildNotification())
         startServer()
         registerOnNetwork()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // If we were killed and restarted while locked, put the lock back up.
+        // If we were killed and restarted while locked, put the lock back up,
+        // and re-arm any auto-lock session that was still running.
         if (prefs.locked) main.post { lock.reassertIfLocked() }
+        main.post { timer.resume() }
         return START_STICKY
     }
 
@@ -86,7 +90,7 @@ class ControlService : Service() {
 
             return when (command) {
                 Protocol.CMD_LOCK -> {
-                    main.post { lock.lock(showBatteryFirst = true) }
+                    main.post { timer.cancel(); lock.lock(showBatteryFirst = true) }
                     json(Response.Status.OK, mapOf("ok" to true, "state" to "locked"))
                 }
                 Protocol.CMD_BATTERY -> {
@@ -94,8 +98,18 @@ class ControlService : Service() {
                     json(Response.Status.OK, mapOf("ok" to true, "state" to "warned"))
                 }
                 Protocol.CMD_UNLOCK -> {
-                    main.post { lock.unlock() }
+                    main.post { timer.cancel(); lock.unlock() }
                     json(Response.Status.OK, mapOf("ok" to true, "state" to "unlocked"))
+                }
+                Protocol.CMD_START_TIMER -> {
+                    val minutes = session.parameters[Protocol.PARAM_MINUTES]
+                        ?.firstOrNull()?.toIntOrNull() ?: 60
+                    main.post { timer.start(minutes) }
+                    json(Response.Status.OK, mapOf("ok" to true, "state" to "timer", "minutes" to minutes))
+                }
+                Protocol.CMD_CANCEL_TIMER -> {
+                    main.post { timer.cancel() }
+                    json(Response.Status.OK, mapOf("ok" to true, "state" to "timer_cancelled"))
                 }
                 Protocol.CMD_STATUS -> json(Response.Status.OK, statusPayload())
                 else -> json(Response.Status.NOT_FOUND, mapOf("error" to "unknown_command"))
@@ -114,7 +128,9 @@ class ControlService : Service() {
         return mapOf(
             "locked" to prefs.locked,
             "battery" to level,
-            "accessibility" to (DadAccessibilityService.instance != null)
+            "accessibility" to (DadAccessibilityService.instance != null),
+            "timer_remaining_ms" to timer.remainingMs(),
+            "timer_total_ms" to prefs.sessionTotalMs
         )
     }
 
