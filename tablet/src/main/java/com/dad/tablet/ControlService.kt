@@ -53,6 +53,7 @@ class ControlService : Service() {
                 main.post { timer.start(minutes) }
             }
             ACTION_CANCEL_TIMER -> main.post { timer.cancel() }
+            ACTION_UNLOCK -> main.post { timer.cancel(); lock.unlock() }
             else -> {
                 // Normal start or a restart after being killed: restore the lock
                 // if needed and re-arm any session that was still running.
@@ -206,6 +207,7 @@ class ControlService : Service() {
 
         const val ACTION_START_TIMER = "com.dad.tablet.action.START_TIMER"
         const val ACTION_CANCEL_TIMER = "com.dad.tablet.action.CANCEL_TIMER"
+        const val ACTION_UNLOCK = "com.dad.tablet.action.UNLOCK"
         const val EXTRA_MINUTES = "minutes"
 
         fun start(context: Context) = deliver(context, null)
@@ -217,6 +219,10 @@ class ControlService : Service() {
         /** Cancel a running session from the tablet UI. */
         fun cancelTimer(context: Context) =
             deliver(context, Intent().setAction(ACTION_CANCEL_TIMER))
+
+        /** Release the fake-shutdown lock (used by the secret unlock gesture). */
+        fun unlock(context: Context) =
+            deliver(context, Intent().setAction(ACTION_UNLOCK))
 
         private fun deliver(context: Context, template: Intent?) {
             val intent = (template ?: Intent()).setClass(context, ControlService::class.java)

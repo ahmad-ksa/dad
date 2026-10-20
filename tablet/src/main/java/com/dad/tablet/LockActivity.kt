@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
@@ -59,32 +60,25 @@ class LockActivity : AppCompatActivity() {
 
     private fun applyMode(intent: Intent?) {
         when (intent?.getStringExtra(EXTRA_MODE)) {
-            MODE_BATTERY_THEN_BLACK -> playBatteryThenBlack()
+            // Both the end-of-timer lock and a power-press re-show keep the red
+            // empty-battery glyph on a black screen until the secret gesture.
+            MODE_BATTERY_THEN_BLACK, MODE_BLACK -> showLocked()
             MODE_BATTERY_TOAST -> playBatteryToast()
-            else -> showBlack()
+            else -> showLocked()
         }
     }
 
-    /** Empty-battery glyph for ~2s, then the screen goes black and stays locked. */
-    private fun playBatteryThenBlack() {
+    /** Red empty-battery glyph centered on black; stays until the secret gesture. */
+    private fun showLocked() {
         batteryGlyph.visibility = View.VISIBLE
         blackLayer.alpha = 0f
-        handler.postDelayed({
-            batteryGlyph.visibility = View.GONE
-            blackLayer.alpha = 1f
-        }, BATTERY_GLYPH_MS)
     }
 
-    /** Only the warning: show the glyph, then close (device keeps working). */
+    /** Only the warning: flash the glyph, then close (device keeps working). */
     private fun playBatteryToast() {
         batteryGlyph.visibility = View.VISIBLE
         blackLayer.alpha = 0f
         handler.postDelayed({ finishAndRemoveTask() }, BATTERY_GLYPH_MS)
-    }
-
-    private fun showBlack() {
-        batteryGlyph.visibility = View.GONE
-        blackLayer.alpha = 1f
     }
 
     private fun showWhenLockedAndTurnScreenOn() {
@@ -100,6 +94,51 @@ class LockActivity : AppCompatActivity() {
             )
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    // --- Secret unlock gesture: three fingers, swipe down -----------------
+
+    private var gestureActive = false
+    private var gestureStartY = 0f
+    private val unlockThresholdPx by lazy { resources.displayMetrics.heightPixels * UNLOCK_SWIPE_FRACTION }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        detectUnlockGesture(ev)
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun detectUnlockGesture(ev: MotionEvent) {
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                if (ev.pointerCount >= REQUIRED_FINGERS) {
+                    gestureActive = true
+                    gestureStartY = averageY(ev)
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (gestureActive && ev.pointerCount >= REQUIRED_FINGERS &&
+                    averageY(ev) - gestureStartY > unlockThresholdPx
+                ) {
+                    gestureActive = false
+                    secretUnlock()
+                }
+            }
+            MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (ev.pointerCount - 1 < REQUIRED_FINGERS) gestureActive = false
+            }
+        }
+    }
+
+    private fun averageY(ev: MotionEvent): Float {
+        var sum = 0f
+        for (i in 0 until ev.pointerCount) sum += ev.getY(i)
+        return sum / ev.pointerCount
+    }
+
+    /** Release the fake shutdown: cancel any session and clear the lock. */
+    private fun secretUnlock() {
+        ControlService.unlock(this)
+        finishAndRemoveTask()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -144,5 +183,9 @@ class LockActivity : AppCompatActivity() {
         const val MODE_BATTERY_THEN_BLACK = "battery_then_black"
         const val MODE_BATTERY_TOAST = "battery_toast"
         private const val BATTERY_GLYPH_MS = 2000L
+
+        /** Three fingers swiped down by this fraction of the screen unlocks. */
+        private const val REQUIRED_FINGERS = 3
+        private const val UNLOCK_SWIPE_FRACTION = 0.25f
     }
 }
