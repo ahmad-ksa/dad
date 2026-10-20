@@ -73,7 +73,18 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshStatus()
+        findViewById<TextView>(R.id.ipValue).text = localIpv4() ?: getString(R.string.ip_unavailable)
         uiHandler.post(ticker)
+    }
+
+    /** The tablet's local IPv4 address, for typing into the phone manually. */
+    private fun localIpv4(): String? {
+        return runCatching {
+            java.net.NetworkInterface.getNetworkInterfaces().toList()
+                .flatMap { it.inetAddresses.toList() }
+                .firstOrNull { !it.isLoopbackAddress && it is java.net.Inet4Address && it.isSiteLocalAddress }
+                ?.hostAddress
+        }.getOrNull()
     }
 
     override fun onPause() {

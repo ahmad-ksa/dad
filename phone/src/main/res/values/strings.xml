@@ -10,6 +10,12 @@
     <string name="connected_to">متصل · %1$s</string>
     <string name="no_tablet">لم يتم العثور على التابلت على هذي الشبكة بعد</string>
 
+    <string name="ip_connect_label">عنوان التابلت (IP) — إذا ما ظهر تلقائياً، اكتبه كما يظهر على التابلت:</string>
+    <string name="ip_hint">مثال: 192.168.1.42</string>
+    <string name="connect">اتصال</string>
+    <string name="connecting">جاري الاتصال…</string>
+    <string name="token_needed">التابلت متصل — تأكد من إدخال رمز الاقتران الصحيح</string>
+
     <string name="pairing_label">رمز الاقتران (يظهر على التابلت)</string>
     <string name="pairing_hint">مثال: 7f3a9c2b1d4e5f60</string>
     <string name="save">حفظ</string>

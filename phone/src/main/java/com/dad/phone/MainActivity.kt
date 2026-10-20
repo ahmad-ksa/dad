@@ -1,5 +1,7 @@
 package com.dad.phone
 
+import android.content.Context
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,7 +42,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusDot: TextView
     private lateinit var statusText: TextView
     private lateinit var timerText: TextView
+    private lateinit var ipField: EditText
     private lateinit var durationButtons: Map<Int, Button>
+
+    private var multicastLock: WifiManager.MulticastLock? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,9 +56,13 @@ class MainActivity : AppCompatActivity() {
         statusDot = findViewById(R.id.statusDot)
         statusText = findViewById(R.id.statusText)
         timerText = findViewById(R.id.timerText)
+        ipField = findViewById(R.id.ipField)
 
         host = prefs.lastHost
         port = prefs.lastPort
+        if (host.isNotEmpty()) ipField.setText(host)
+
+        findViewById<Button>(R.id.btnConnect).setOnClickListener { connectManually() }
 
         val tokenField = findViewById<EditText>(R.id.tokenField)
         tokenField.setText(prefs.token)
@@ -88,11 +97,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        acquireMulticastLock()
         discovery.start(
             onResolved = { h, p ->
                 host = h; port = p; online = true
                 prefs.lastHost = h; prefs.lastPort = p
-                runOnUiThread { renderStatus() }
+                runOnUiThread { if (ipField.text.isEmpty()) ipField.setText(h); renderStatus() }
                 syncStatus()
             },
             onLost = {
@@ -105,8 +115,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         discovery.stop()
+        releaseMulticastLock()
         uiHandler.removeCallbacks(ticker)
         super.onPause()
+    }
+
+    /** Some routers filter mDNS unless the app holds a multicast lock. */
+    private fun acquireMulticastLock() {
+        if (multicastLock != null) return
+        val wifi = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        multicastLock = wifi.createMulticastLock("dad-nsd").apply {
+            setReferenceCounted(false)
+            runCatching { acquire() }
+        }
+    }
+
+    private fun releaseMulticastLock() {
+        multicastLock?.let { runCatching { if (it.isHeld) it.release() } }
+        multicastLock = null
+    }
+
+    /** Manual fallback: connect to the IP shown on the tablet's setup screen. */
+    private fun connectManually() {
+        val ip = ipField.text.toString().trim()
+        if (ip.isEmpty()) {
+            Toast.makeText(this, R.string.ip_hint, Toast.LENGTH_SHORT).show()
+            return
+        }
+        host = ip
+        port = Protocol.PORT
+        prefs.lastHost = ip
+        prefs.lastPort = port
+        Toast.makeText(this, R.string.connecting, Toast.LENGTH_SHORT).show()
+        syncStatus()
     }
 
     // --- Commands ----------------------------------------------------------
@@ -159,10 +200,14 @@ class MainActivity : AppCompatActivity() {
         val client = CommandClient(prefs.token)
         lifecycleScope.launch {
             val r = client.send(host, port, Protocol.CMD_STATUS)
-            online = r.ok
+            val reachableButBadToken = !r.ok && r.body.contains("bad_token")
+            online = r.ok || reachableButBadToken
             if (r.ok) runCatching {
                 val remaining = JSONObject(r.body).optLong("timer_remaining_ms", 0L)
                 if (remaining > 0L) startLocalCountdown(remaining) else stopLocalCountdown()
+            }
+            if (reachableButBadToken) {
+                Toast.makeText(this@MainActivity, R.string.token_needed, Toast.LENGTH_LONG).show()
             }
             renderStatus()
         }

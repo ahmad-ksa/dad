@@ -7,6 +7,8 @@
 
     <string name="setup_title">داد — إعداد التابلت</string>
     <string name="pairing_token_label">رمز الاقتران (أدخله في الجوال):</string>
+    <string name="ip_label">عنوان هذا التابلت على الشبكة (اكتبه في الجوال):</string>
+    <string name="ip_unavailable">غير متصل بشبكة واي فاي</string>
     <string name="status_label">حالة الصلاحيات</string>
 
     <string name="btn_overlay">١. السماح بالعرض فوق التطبيقات</string>

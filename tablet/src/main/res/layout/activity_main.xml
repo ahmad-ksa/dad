@@ -32,6 +32,21 @@
             android:textColor="@color/dad_accent"
             android:paddingVertical="8dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ip_label"
+            android:paddingTop="10dp" />
+
+        <TextView
+            android:id="@+id/ipValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/dad_accent"
+            android:paddingVertical="4dp" />
+
         <Button android:id="@+id/btnOverlay"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="16dp" android:text="@string/btn_overlay" />
