@@ -91,6 +91,7 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnStartTimer).setOnClickListener { startTimer() }
         findViewById<Button>(R.id.btnCancelTimer).setOnClickListener { cancelTimer() }
+        findViewById<Button>(R.id.btnUpdate).setOnClickListener { Updater.checkAndInstall(this) }
 
         renderStatus()
         updateTimerText()

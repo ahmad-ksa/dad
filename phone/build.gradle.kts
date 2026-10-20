@@ -11,17 +11,30 @@ android {
         applicationId = "com.dad.phone"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("verCode") as String?)?.toIntOrNull() ?: 1
+        versionName = "1.0.${(project.findProperty("verCode") as String?) ?: "0"}"
+    }
+
+    signingConfigs {
+        create("app") {
+            storeFile = rootProject.file("dad.keystore")
+            storePassword = "dadpass"
+            keyAlias = "dad"
+            keyPassword = "dadpass"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("app")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("app")
         }
     }
     compileOptions {

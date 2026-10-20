@@ -41,10 +41,11 @@ jobs:
           cp "$tmp/gradle/wrapper/gradle-wrapper.jar" gradle/wrapper/gradle-wrapper.jar
           echo "Wrapper jar refreshed: $(wc -c < gradle/wrapper/gradle-wrapper.jar) bytes"
 
-      - name: Build debug APKs
+      - name: Build signed release APKs
         run: |
           set +e
-          ./gradlew :tablet:assembleDebug :phone:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+          ./gradlew :tablet:assembleRelease :phone:assembleRelease \
+            -PverCode=${{ github.run_number }} --no-daemon --stacktrace 2>&1 | tee build.log
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
             # GitHub caps annotations per step, so join all Kotlin/AAPT error
@@ -64,8 +65,8 @@ jobs:
       - name: Collect APKs
         run: |
           mkdir -p dist
-          cp tablet/build/outputs/apk/debug/tablet-debug.apk dist/dad-tablet.apk
-          cp phone/build/outputs/apk/debug/phone-debug.apk  dist/dad-phone.apk
+          cp tablet/build/outputs/apk/release/tablet-release.apk dist/dad-tablet.apk
+          cp phone/build/outputs/apk/release/phone-release.apk  dist/dad-phone.apk
           ls -la dist
 
       # Downloadable from the Actions run page as well
