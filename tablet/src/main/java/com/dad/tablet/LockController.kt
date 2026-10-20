@@ -1,6 +1,7 @@
 package com.dad.tablet
 
 import android.app.ActivityManager
+import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
@@ -62,6 +63,19 @@ class LockController(private val context: Context) {
             silenceEverything()
             showLockScreen(showBatteryFirst = false)
         }
+    }
+
+    /** True if the parent enabled Device Admin, which lets us turn the screen off. */
+    fun isDeviceAdminActive(): Boolean {
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        return dpm.isAdminActive(DadDeviceAdminReceiver.component(context))
+    }
+
+    /** Turn the real screen off (like a dead battery). Needs Device Admin. */
+    fun lockScreenNow() {
+        if (!isDeviceAdminActive()) return
+        val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        runCatching { dpm.lockNow() }
     }
 
     // --- Audio -------------------------------------------------------------

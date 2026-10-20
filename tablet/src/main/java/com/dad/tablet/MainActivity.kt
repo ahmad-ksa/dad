@@ -1,5 +1,6 @@
 package com.dad.tablet
 
+import android.app.admin.DevicePolicyManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnOverlay).setOnClickListener { requestOverlay() }
         findViewById<Button>(R.id.btnAccessibility).setOnClickListener { openAccessibility() }
         findViewById<Button>(R.id.btnBattery).setOnClickListener { ignoreBatteryOptimizations() }
+        findViewById<Button>(R.id.btnDeviceAdmin).setOnClickListener { requestDeviceAdmin() }
         findViewById<Button>(R.id.btnStart).setOnClickListener {
             ControlService.start(this)
             Toast.makeText(this, R.string.service_started, Toast.LENGTH_SHORT).show()
@@ -83,8 +85,21 @@ class MainActivity : AppCompatActivity() {
         val status = buildString {
             appendLine(statusLine(R.string.perm_overlay, hasOverlayPermission()))
             appendLine(statusLine(R.string.perm_accessibility, DadAccessibilityService.instance != null))
+            appendLine(statusLine(R.string.perm_device_admin, isDeviceAdminActive()))
         }
         findViewById<TextView>(R.id.statusValue).text = status
+    }
+
+    private fun isDeviceAdminActive(): Boolean {
+        val dpm = getSystemService(DevicePolicyManager::class.java)
+        return dpm?.isAdminActive(DadDeviceAdminReceiver.component(this)) == true
+    }
+
+    private fun requestDeviceAdmin() {
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+            .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, DadDeviceAdminReceiver.component(this))
+            .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, getString(R.string.device_admin_desc))
+        startActivity(intent)
     }
 
     private fun statusLine(labelRes: Int, granted: Boolean): String {

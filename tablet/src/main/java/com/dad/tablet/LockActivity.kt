@@ -29,6 +29,12 @@ class LockActivity : AppCompatActivity() {
     private lateinit var batteryGlyph: View
     private lateinit var blackLayer: View
 
+    /** True only for the brief low-battery warning (no screen-off, auto-closes). */
+    private var isToast = false
+
+    /** After a brief display, turn the real screen off like a dead battery. */
+    private val screenOffRunnable = Runnable { LockController(this).lockScreenNow() }
+
     private val dismissReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == LockController.ACTION_DISMISS_LOCK) {
@@ -60,12 +66,27 @@ class LockActivity : AppCompatActivity() {
 
     private fun applyMode(intent: Intent?) {
         when (intent?.getStringExtra(EXTRA_MODE)) {
-            // Both the end-of-timer lock and a power-press re-show keep the red
-            // empty-battery glyph on a black screen until the secret gesture.
-            MODE_BATTERY_THEN_BLACK, MODE_BLACK -> showLocked()
-            MODE_BATTERY_TOAST -> playBatteryToast()
-            else -> showLocked()
+            MODE_BATTERY_TOAST -> { isToast = true; playBatteryToast() }
+            // The lock: red empty-battery glyph, then the screen turns off.
+            else -> { isToast = false; showLocked() }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // On first show and on every power-press wake, display the fake battery
+        // briefly, then turn the screen off (dead-battery illusion).
+        if (!isToast && Prefs(this).locked) {
+            showLocked()
+            handler.removeCallbacks(screenOffRunnable)
+            handler.postDelayed(screenOffRunnable, SCREEN_OFF_DELAY_MS)
+        }
+    }
+
+    override fun onPause() {
+        // Don't let a pending screen-off fire after we've been dismissed.
+        handler.removeCallbacks(screenOffRunnable)
+        super.onPause()
     }
 
     /** Red empty-battery glyph centered on black; stays until the secret gesture. */
@@ -96,7 +117,7 @@ class LockActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    // --- Secret unlock gesture: three fingers, swipe down -----------------
+    // --- Secret unlock gesture: two fingers, swipe down -------------------
 
     private var gestureActive = false
     private var gestureStartY = 0f
@@ -184,8 +205,11 @@ class LockActivity : AppCompatActivity() {
         const val MODE_BATTERY_TOAST = "battery_toast"
         private const val BATTERY_GLYPH_MS = 2000L
 
-        /** Three fingers swiped down by this fraction of the screen unlocks. */
-        private const val REQUIRED_FINGERS = 3
+        /** How long the fake battery shows before the screen turns off. */
+        private const val SCREEN_OFF_DELAY_MS = 4000L
+
+        /** Two fingers swiped down by this fraction of the screen unlocks. */
+        private const val REQUIRED_FINGERS = 2
         private const val UNLOCK_SWIPE_FRACTION = 0.25f
     }
 }

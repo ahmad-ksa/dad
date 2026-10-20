@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dad</string>
-    <string name="channel_name">Control channel</string>
-    <string name="service_running">Parental control is active</string>
-    <string name="service_started">Control service started</string>
+    <string name="app_name">داد — التابلت</string>
+    <string name="channel_name">قناة التحكم</string>
+    <string name="service_running">التحكم الأبوي مُفعّل</string>
+    <string name="service_started">تم تشغيل خدمة التحكم</string>
 
-    <string name="setup_title">Dad — Tablet setup</string>
-    <string name="pairing_token_label">Pairing code (enter this on the phone):</string>
-    <string name="status_label">Permission status</string>
+    <string name="setup_title">داد — إعداد التابلت</string>
+    <string name="pairing_token_label">رمز الاقتران (أدخله في الجوال):</string>
+    <string name="status_label">حالة الصلاحيات</string>
 
-    <string name="btn_overlay">1. Allow display over other apps</string>
-    <string name="btn_accessibility">2. Enable accessibility service</string>
-    <string name="btn_battery">3. Ignore battery optimizations</string>
-    <string name="btn_start">4. Start control service</string>
-    <string name="btn_test_lock">Test fake shutdown</string>
+    <string name="btn_overlay">١. السماح بالعرض فوق التطبيقات</string>
+    <string name="btn_accessibility">٢. تفعيل خدمة إمكانية الوصول</string>
+    <string name="btn_battery">٣. تجاهل تحسين البطارية</string>
+    <string name="btn_device_admin">٤. تفعيل مسؤول الجهاز (لإطفاء الشاشة)</string>
+    <string name="btn_start">٥. تشغيل خدمة التحكم</string>
+    <string name="btn_test_lock">تجربة الإطفاء الوهمي</string>
 
-    <string name="perm_overlay">Display over other apps</string>
-    <string name="perm_accessibility">Accessibility service</string>
-    <string name="enable_accessibility_hint">Find \"Dad\" in the list and turn it on</string>
+    <string name="perm_overlay">العرض فوق التطبيقات</string>
+    <string name="perm_accessibility">خدمة إمكانية الوصول</string>
+    <string name="perm_device_admin">مسؤول الجهاز</string>
+    <string name="enable_accessibility_hint">اختر «داد» من القائمة وفعّله</string>
 
-    <string name="device_admin_desc">Lets Dad turn the screen off instantly (optional).</string>
+    <string name="device_admin_desc">يسمح لـ«داد» بإطفاء شاشة التابلت فوراً عند الإطفاء الوهمي.</string>
 
-    <string name="timer_section">Auto-lock timer</string>
-    <string name="timer_hint">Fake battery warnings as the time runs low, then a full shutdown.</string>
-    <string name="min_15">15 min</string>
-    <string name="min_30">30 min</string>
-    <string name="min_45">45 min</string>
-    <string name="min_60">1 hour</string>
-    <string name="start_timer">Start timer</string>
-    <string name="cancel_timer">Cancel</string>
-    <string name="timer_idle">No timer running</string>
-    <string name="timer_running">Locks in %1$s</string>
-    <string name="timer_done">Time is up</string>
+    <string name="timer_section">مؤقّت الإطفاء التلقائي</string>
+    <string name="timer_hint">تنبيهات بطارية وهمية مع اقتراب انتهاء الوقت، ثم إطفاء.</string>
+    <string name="min_15">١٥ دقيقة</string>
+    <string name="min_30">٣٠ دقيقة</string>
+    <string name="min_45">٤٥ دقيقة</string>
+    <string name="min_60">ساعة</string>
+    <string name="start_timer">ابدأ المؤقت</string>
+    <string name="cancel_timer">إلغاء</string>
+    <string name="timer_idle">لا يوجد مؤقت شغّال</string>
+    <string name="timer_running">يُقفل بعد %1$s</string>
+    <string name="timer_done">انتهى الوقت</string>
 </resources>
