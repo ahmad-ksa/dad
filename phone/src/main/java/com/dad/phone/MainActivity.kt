@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         durationButtons = mapOf(
+            1 to findViewById(R.id.btnMin1),
             15 to findViewById(R.id.btnMin15),
             30 to findViewById(R.id.btnMin30),
             45 to findViewById(R.id.btnMin45),

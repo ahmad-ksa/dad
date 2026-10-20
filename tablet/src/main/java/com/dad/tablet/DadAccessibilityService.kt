@@ -1,6 +1,8 @@
 package com.dad.tablet
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.view.accessibility.AccessibilityEvent
 
 /**
@@ -24,14 +26,28 @@ class DadAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        if (!prefs.locked) return
-
         val pkg = event.packageName?.toString() ?: return
-        // If anything other than our own lock screen comes to the foreground
-        // while locked, re-assert the lock.
-        if (pkg != packageName) {
+
+        // Remember the last real foreground app (not us, not the launcher), so a
+        // lock can terminate exactly that app.
+        if (pkg != packageName && pkg != launcherPackage()) {
+            lastForegroundPackage = pkg
+        }
+
+        // While locked, if anything other than our lock surface surfaces, re-assert.
+        if (prefs.locked && pkg != packageName) {
             LockController(this).reassertIfLocked()
         }
+    }
+
+    private var cachedLauncher: String? = null
+    private fun launcherPackage(): String? {
+        cachedLauncher?.let { return it }
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        cachedLauncher = packageManager
+            .resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            ?.activityInfo?.packageName
+        return cachedLauncher
     }
 
     override fun onInterrupt() {}
@@ -50,5 +66,9 @@ class DadAccessibilityService : AccessibilityService() {
         @Volatile
         var instance: DadAccessibilityService? = null
             private set
+
+        /** The last app that was in the foreground, so a lock can close it. */
+        @Volatile
+        var lastForegroundPackage: String? = null
     }
 }

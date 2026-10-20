@@ -29,6 +29,7 @@
 
     <string name="timer_label">مؤقّت الإطفاء التلقائي</string>
     <string name="timer_hint">تنبيهات بطارية وهمية مع اقتراب انتهاء الوقت، ثم إطفاء.</string>
+    <string name="min_1">دقيقة (للاختبار)</string>
     <string name="min_15">١٥ دقيقة</string>
     <string name="min_30">٣٠ دقيقة</string>
     <string name="min_45">٤٥ دقيقة</string>

@@ -8,6 +8,8 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.util.Log
 
@@ -30,37 +32,37 @@ class LockController(private val context: Context) {
     private val prefs = Prefs(context)
     private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var focusRequest: AudioFocusRequest? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     val isLocked: Boolean get() = prefs.locked
 
-    /** Enter the fake-shutdown lock: mute, stop the game, show the black screen. */
+    /** Enter the fake-shutdown lock: mute, close the game, cover the screen. */
     fun lock(showBatteryFirst: Boolean) {
         prefs.locked = true
         silenceEverything()
         stopForegroundApp()
+        LockOverlay.show(context) { ControlService.unlock(context) }
         showLockScreen(showBatteryFirst)
     }
 
     /** Only show the fake "battery almost empty" warning, without full lock. */
     fun showBatteryWarning() {
-        val intent = Intent(context, LockActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra(LockActivity.EXTRA_MODE, LockActivity.MODE_BATTERY_TOAST)
-        }
-        context.startActivity(intent)
+        LockOverlay.flash(context)
     }
 
     /** Release the lock, restore audio, and close the lock screen. */
     fun unlock() {
         prefs.locked = false
         restoreAudio()
+        LockOverlay.hide(context)
         context.sendBroadcast(Intent(ACTION_DISMISS_LOCK).setPackage(context.packageName))
     }
 
-    /** Re-assert the lock screen if we are supposed to be locked (used on screen-on). */
+    /** Re-assert the lock surface if we are supposed to be locked (used on screen-on). */
     fun reassertIfLocked() {
         if (prefs.locked) {
             silenceEverything()
+            LockOverlay.show(context) { ControlService.unlock(context) }
             showLockScreen(showBatteryFirst = false)
         }
     }
@@ -139,21 +141,26 @@ class LockController(private val context: Context) {
     // --- Stopping the running app -----------------------------------------
 
     private fun stopForegroundApp() {
-        // Accessibility route (reliable): go to Home, which backgrounds the game.
-        // Most games pause rendering/audio once backgrounded.
+        // Remember which app was in front, then send it to the background...
+        val target = DadAccessibilityService.lastForegroundPackage
         DadAccessibilityService.instance?.goHome()
 
-        // Best-effort: ask the system to stop our own background processes is a
-        // no-op for other apps on modern Android, but we try to trim what we can.
+        // ...and once it is backgrounded, terminate its process so it is truly
+        // closed (not just paused). This is the strongest a non-Device-Owner app
+        // can do; apps with sticky foreground services may still survive.
+        mainHandler.postDelayed({ forceStop(target) }, KILL_DELAY_MS)
+    }
+
+    private fun forceStop(target: String?) {
         runCatching {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            // We only have permission to kill background of apps we could affect;
-            // this is intentionally conservative and silently ignored if denied.
+            if (!target.isNullOrEmpty() && target != context.packageName) {
+                am.killBackgroundProcesses(target)
+            }
+            // Also trim any other non-system background apps we are allowed to.
             am.runningAppProcesses?.forEach { proc ->
-                if (proc.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_BACKGROUND &&
-                    proc.pkgList.none { it == context.packageName }
-                ) {
-                    proc.pkgList.forEach { pkg -> am.killBackgroundProcesses(pkg) }
+                proc.pkgList.forEach { pkg ->
+                    if (pkg != context.packageName) am.killBackgroundProcesses(pkg)
                 }
             }
         }
@@ -174,6 +181,7 @@ class LockController(private val context: Context) {
 
     companion object {
         private const val TAG = "LockController"
+        private const val KILL_DELAY_MS = 600L
         const val ACTION_DISMISS_LOCK = "com.dad.tablet.DISMISS_LOCK"
     }
 }
